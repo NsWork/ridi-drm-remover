@@ -9,6 +9,8 @@ const mkdirp = require('mkdirp');
 const unzip = require('unzip');
 const username = require('username');
 
+const windows = require('windows');
+
 async function entrypoint() {
     const win = gui.Window.create({});
     {
@@ -34,7 +36,9 @@ async function entrypoint() {
 
 const screens = {
     main({ win, context }) {
-        const view = gui.Vibrant.create();
+        const view = gui.Container.create();
+        win.setContentView(view);
+        /*
         {
             view.setBlendingMode('behind-window');
             view.setMaterial('dark');
@@ -43,6 +47,7 @@ const screens = {
                 justifyContent: 'center',
             });
         }
+        */
         const openFileDialogButton = gui.Button.create('drm 제거된 파일들을 저장할 경로 변경');
         {
             openFileDialogButton.onClick = () => {
@@ -58,13 +63,13 @@ const screens = {
         const noteLabel = gui.Label.create('다음의 경로에 저장됩니다:');
         {
             noteLabel.setAlign('center');
-            noteLabel.setColor('#fff');
+            //noteLabel.setColor('#fff');
             view.addChildView(noteLabel);
         }
         const savePathLabel = gui.Label.create(context.savePath);
         {
             savePathLabel.setAlign('center');
-            savePathLabel.setColor('#fff');
+            //savePathLabel.setColor('#fff');
             view.addChildView(savePathLabel);
         }
         const runButton = gui.Button.create('drm 제거 시작');
@@ -75,7 +80,9 @@ const screens = {
         return { view };
     },
     run({ win, context }) {
-        const view = gui.Vibrant.create();
+        const view = gui.Container.create();
+        win.setContentView(view);
+        /*
         {
             view.setBlendingMode('behind-window');
             view.setMaterial('dark');
@@ -84,10 +91,11 @@ const screens = {
                 justifyContent: 'center',
             });
         }
+        */
         const noteLabel = gui.Label.create('작업 준비중');
         {
             noteLabel.setAlign('center');
-            noteLabel.setColor('#fff');
+            //noteLabel.setColor('#fff');
             view.addChildView(noteLabel);
         }
         const progressBar = gui.ProgressBar.create();
@@ -114,7 +122,7 @@ const screens = {
                         [type, fd] = await openEbook(libraryPath, bookId);
                         await asyncMkdirp(savePath);
                     } catch (e) {
-                        console.error(e);
+                        //console.error(e);
                         continue;
                     }
                     console.log(bookId, type);
@@ -221,17 +229,17 @@ async function openEbook(libraryPath, bookId) {
             continue;
         }
     }
-    throw new Error('unsupported ebook type');
+    //throw new Error('unsupported ebook type');
 }
 
 async function getRidiUserNames(systemUsername) {
-    return (await getChildFoldersShallow(`/Users/${ systemUsername }/Library/Application Support/RIDI/Ridibooks/`)).filter(
+    return (await getChildFoldersShallow(`c:/Users/${ systemUsername }/AppData/Local/RIDI/Ridibooks/`)).filter(
         folder => (folder !== 'QtWebEngine') && (folder !== 'fontcache')
     );
 }
 
 function getLibraryPath(systemUsername, ridiUsername) {
-    return `/Users/${ systemUsername }/Library/Application Support/RIDI/Ridibooks/${ ridiUsername }/library`;
+    return `c:/Users/${ systemUsername }/AppData/Local/RIDI/Ridibooks/${ ridiUsername }/library`;
 }
 
 async function decryptKeyFile(deviceId, libraryPath, bookId) {
@@ -248,19 +256,10 @@ async function decryptKeyFile(deviceId, libraryPath, bookId) {
     return contentKey;
 }
 
-async function getDeviceId(systemUsername) {
-    const plist = await parseBplist(`/Users/${ systemUsername }/Library/Preferences/com.ridibooks.Ridibooks.plist`);
+function getDeviceId() {
+    const deviceId = windows.registry('HKCU/Software/RIDI/Ridibooks/device').device_id;
     const sc = new SimpleCrypt('0c2f1bb4acb9f023');
-    return sc.decrypt(Buffer.from(plist[0]['device.device_id'], 'base64'));
-}
-
-function parseBplist(filePath) {
-    return new Promise((resolve, reject) => {
-        bplist.parseFile(filePath, (err, result) => {
-            if (err) return reject(err);
-            resolve(result);
-        });
-    });
+    return sc.decrypt(Buffer.from(deviceId, 'base64'));
 }
 
 const memo = [];

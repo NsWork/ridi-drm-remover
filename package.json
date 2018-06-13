@@ -11,7 +11,8 @@
     "gui": "^0.4.3",
     "mkdirp": "^0.5.1",
     "unzip": "^0.1.11",
-    "username": "^3.0.0"
+    "username": "^3.0.0",
+    "windows": "0.0.8"
   },
   "devDependencies": {
     "yackage": "^0.2.5"
